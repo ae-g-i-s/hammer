@@ -11,11 +11,15 @@ if platform.system() == 'Windows':
 vars = Variables(None, ARGUMENTS)
 vars.Add(PathVariable('DESTDIR', 'Root directory to install in (useful for packaging scripts)', None, PathVariable.PathIsDirCreate))
 vars.Add(PathVariable('prefix', 'Where to install in the FHS', default_install_dir, PathVariable.PathAccept))
-vars.Add(ListVariable('bindings', 'Language bindings to build', 'none', ['cpp', 'dotnet', 'perl', 'php', 'python', 'ruby']))
+vars.Add(ListVariable('bindings', 'Language bindings to build', 'none', ['cpp', 'dotnet', 'perl', 'php', 'python', 'ruby', 'java']))
 
 tools = ['default', 'scanreplace']
 if 'dotnet' in ARGUMENTS.get('bindings', []):
 	tools.append('csharp/mono')
+if 'java' in ARGUMENTS.get('bindings', []):
+  tools.append('javac')
+  tools.append('javah')
+  tools.append('jar')
 
 envvars = {'PATH' : os.environ['PATH']}
 if 'PKG_CONFIG_PATH' in os.environ:

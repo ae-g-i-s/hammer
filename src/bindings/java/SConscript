@@ -1,0 +1,47 @@
+# -*- python -*-
+import os.path
+import platform
+import SCons.Errors
+Import("env libhammer_shared testruns targets")
+
+javaenv = env.Clone()
+
+import os
+
+# There should be a jni.h in $JAVA_HOME/include
+java_home = os.environ['JAVA_HOME']
+jni_include = java_home + '/include/'
+if not os.path.exists(jni_include + 'jni.h'):
+  raise SCons.Errors.StopError( 'No jni.h in %s, is your $JAVA_HOME correct?' % (jni_include) )
+
+# Additionally, there is a platform-specific jni_md.h
+jni_platform_include = ''
+for platform in [env['PLATFORM'], 'linux', 'darwin', 'win32', 'freebsd', 'openbsd', 'solaris', 'hp-ux', 'alpha', 'aix']:
+  if os.path.exists(jni_include + platform + '/jni_md.h'):
+    jni_platform_include = jni_include + platform
+    break
+if not jni_platform_include:
+  raise SCons.Errors.StopError( 'Could not find jni_md.h in any platform-specific include folder under %s.' % (jni_include))
+
+# Compile Java sources
+java_classes = javaenv.Java(target = '.', source = 'com/upstandinghackers/hammer/')
+
+# JAR it up
+jar = javaenv.Jar(target = 'hammer.jar', source = Glob('com/upstandinghackers/hammer/*.class'))
+
+# Generate headers
+javah_classes = ['Hammer', 'Parser', 'ParseResult', 'ParsedToken']
+javah_sources = map(lambda s: 'com/upstandinghackers/hammer/' + s, javah_classes)
+java_headers = javaenv.JavaH(target = 'include', source = javah_sources)
+
+# Build objects using the generated headers plus Hammer
+javaenv.Append(LIBS=["hammer"],LIBPATH=["../../"],CPPPATH=[".", "./include", "../..", jni_include, jni_platform_include])
+java_obj = javaenv.SharedObject(Glob('com_upstandinghackers_hammer*.c'))
+javaenv.Depends(java_obj, java_headers)
+
+# Finally, the actual shared object for use with javac
+libjhammer = javaenv.SharedLibrary(target = 'libjhammer.so', source = java_obj)
+
+Default([jar, libjhammer])
+
+javaenv.Install('$libpath', [libjhammer])
