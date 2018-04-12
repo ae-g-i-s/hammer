@@ -27,7 +27,7 @@ if not jni_platform_include:
 java_classes = javaenv.Java(target = '.', source = 'com/upstandinghackers/hammer/')
 
 # JAR it up
-jar = javaenv.Jar(target = 'hammer.jar', source = Glob('com/upstandinghackers/hammer/*.class'))
+jar = javaenv.Jar(target = 'hammer.jar', source = java_classes)
 
 # Generate headers
 javah_classes = ['Hammer', 'Parser', 'ParseResult', 'ParsedToken']
