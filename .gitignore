@@ -3,7 +3,6 @@
 *.a
 *.class
 *.so
-src/bindings/java/com*.h
 src/test_suite
 lib/hush
 examples/dns
